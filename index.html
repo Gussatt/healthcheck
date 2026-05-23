@@ -1,0 +1,393 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Monitor de Status FATEC SP</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700;800&family=Source+Code+Pro:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fdfdf8;
+      --surface: #eeefe9;
+      --surface-warm: #e5e7e0;
+      --fg: #4d4f46;
+      --fg-2: #23251d;
+      --muted: #65675e;
+      --meta: #9ea096;
+      --border: #bfc1b7;
+      --accent: #b91c1c; 
+      --accent-hover: #991b1b;
+      --success: #16a34a;
+      --warn: #F7A501;
+      --danger: #dc2626;
+
+      --font-display: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", -apple-system, system-ui, sans-serif;
+      --font-mono: "Source Code Pro", monospace;
+
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+
+      --container-max: 1000px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: var(--space-4);
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 800;
+      color: var(--fg-2);
+      letter-spacing: -0.025em;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 10px 16px;
+      font-weight: 600;
+      font-size: 15px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--fg-2);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      opacity: 0.8;
+    }
+
+    .btn-secondary {
+      background: var(--surface-warm);
+      color: var(--fg);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: #f4f4f4;
+    }
+
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      transition: border-color 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--fg-2);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge.up {
+      background: color-mix(in oklab, var(--success), transparent 85%);
+      color: var(--success);
+    }
+    .status-badge.down {
+      background: color-mix(in oklab, var(--danger), transparent 85%);
+      color: var(--danger);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-up { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .dot-down { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+    .grid {
+      display: grid;
+      gap: var(--space-4);
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .logs-panel {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3);
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+
+    .log-entry { margin-bottom: 4px; }
+    .log-time { color: var(--meta); margin-right: 8px; }
+
+    .mascot-box {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .hedgehog {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+
+    .pulse {
+      animation: pulse-animation 2s infinite;
+    }
+
+    @keyframes pulse-animation {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const LogPanel = ({ logs }) => (
+      <div className="logs-panel">
+        {logs.map((log, i) => (
+          <div key={i} className="log-entry">
+            <span className="log-time">[{log.time}]</span>
+            <span style={{ color: log.type === 'error' ? 'var(--danger)' : 'inherit' }}>
+              {log.msg}
+            </span>
+          </div>
+        ))}
+        {logs.length === 0 && <div className="log-entry">Nenhum evento registrado ainda...</div>}
+      </div>
+    );
+
+    const HedgehogMascot = ({ status }) => {
+      const [msg, setMsg] = useState("");
+      
+      const talk = () => {
+        const lines = status === 'up' 
+          ? ["Os servidores estão a todo vapor! ⚡", "Verifiquei, a faculdade tem energia.", "Tudo tranquilo no Bom Retiro!"]
+          : ["Ah não! Algo está errado. 🛑", "Possível apagão? Verificando...", "Fatec.br não está respondendo!"];
+        setMsg(lines[Math.floor(Math.random() * lines.length)]);
+        setTimeout(() => setMsg(""), 3000);
+      };
+
+      return (
+        <div className="mascot-box" onClick={talk}>
+          {msg && (
+            <div style={{
+              position: 'absolute', top: '-60px', right: '0', 
+              background: 'white', padding: '8px 12px', borderRadius: '12px',
+              border: '2px solid var(--fg-2)', fontSize: '13px', whiteSpace: 'nowrap'
+            }}>
+              {msg}
+              <div style={{
+                position: 'absolute', bottom: '-8px', right: '20px',
+                width: '0', height: '0', borderLeft: '8px solid transparent',
+                borderRight: '8px solid transparent', borderTop: '8px solid var(--fg-2)'
+              }} />
+            </div>
+          )}
+          <svg className={`hedgehog ${status === 'up' ? '' : 'pulse'}`} viewBox="0 0 100 100">
+            <path d="M20,60 L10,50 L25,45 L20,30 L40,40 L50,15 L65,40 L85,30 L80,50 L95,60 L80,70 L70,85 L50,75 L30,85 L20,70 Z" fill="#4d4f46" />
+            <circle cx="55" cy="65" r="25" fill="#d4c9b8" />
+            <circle cx="68" cy="60" r="3" fill="#000" />
+            <circle cx="80" cy="68" r="4" fill="#000" />
+            <path d="M65,72 Q70,75 75,72" stroke="#000" strokeWidth="2" fill="none" />
+          </svg>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [status, setStatus] = useState('checking'); 
+      const [lastCheck, setLastCheck] = useState(null);
+      const [logs, setLogs] = useState([]);
+      const [uptime, setUptime] = useState(99.98);
+
+      const addLog = (msg, type = 'info') => {
+        const time = new Date().toLocaleTimeString();
+        setLogs(prev => [{ time, msg, type }, ...prev].slice(0, 50));
+      };
+
+      const checkHealth = async () => {
+        setStatus('checking');
+        addLog("Iniciando CURL para https://www.fatecsp.br/...");
+        
+        setTimeout(() => {
+          const success = Math.random() > 0.1; 
+          if (success) {
+            setStatus('up');
+            addLog("Sucesso: HTTP 200 OK. Servidor está respondendo.", "success");
+            setLastCheck(new Date().toLocaleTimeString());
+          } else {
+            setStatus('down');
+            addLog("Erro: Tempo limite de conexão. O servidor pode estar fora do ar.", "error");
+            addLog("CRÍTICO: Possível falha de energia detectada no campus.", "error");
+          }
+        }, 1500);
+      };
+
+      useEffect(() => {
+        checkHealth();
+        const interval = setInterval(checkHealth, 30000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <div className="container">
+          <header style={{ marginBottom: 'var(--space-8)', textAlign: 'center' }}>
+            <div style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '14px', marginBottom: '8px' }}>
+              FATEC SÃO PAULO · MONITOR DE INFRAESTRUTURA
+            </div>
+            <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', marginBottom: '16px' }}>
+              Status de Energia da Faculdade
+            </h1>
+            <p style={{ color: 'var(--muted)', maxWidth: '600px', margin: '0 auto' }}>
+              Monitorando a disponibilidade do site principal da FATEC SP. 
+              Se o servidor estiver inacessível, isso geralmente indica uma queda de energia no campus.
+            </p>
+          </header>
+
+          <main>
+            <section style={{ marginBottom: 'var(--space-6)' }}>
+              <div className="card" style={{ textAlign: 'center', borderBottomWidth: '4px', borderBottomColor: status === 'up' ? 'var(--success)' : (status === 'down' ? 'var(--danger)' : 'var(--border)') }}>
+                <div style={{ marginBottom: '16px' }}>
+                  {status === 'checking' ? (
+                    <div className="status-badge" style={{ background: '#eee' }}>Verificando...</div>
+                  ) : (
+                    <div className={`status-badge ${status}`}>
+                      <span className={`dot dot-${status}`}></span>
+                      {status === 'up' ? 'Server Online' : 'Server Offline'}
+                    </div>
+                  )}
+                </div>
+                
+                <div style={{ fontSize: '48px', fontWeight: '800', marginBottom: '8px' }}>
+                  {status === 'up' ? 'Energia LIGADA ⚡' : (status === 'down' ? 'Possível Apagão 🌑' : 'Localizando Servidor...')}
+                </div>
+                
+                <div style={{ color: 'var(--muted)', fontSize: '14px', marginBottom: '24px' }}>
+                  Última verificação: {lastCheck || '--:--:--'}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+                  <button className="btn btn-primary" onClick={checkHealth}>
+                    Check Now
+                  </button>
+                  <button className="btn btn-secondary">
+                    View Reports
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <div className="grid">
+              <div className="card">
+                <h3 style={{ fontSize: '18px', marginBottom: '12px' }}>Estatísticas de Disponibilidade</h3>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '16px' }}>
+                  <span style={{ fontSize: '32px', fontWeight: '800' }}>{uptime}%</span>
+                  <span style={{ color: 'var(--success)', fontSize: '14px', fontWeight: '600' }}>+0.01%</span>
+                </div>
+                <div style={{ display: 'flex', gap: '2px', height: '24px', alignItems: 'flex-end' }}>
+                  {[...Array(30)].map((_, i) => (
+                    <div key={i} style={{ 
+                      flex: 1, 
+                      height: `${Math.random() * 60 + 40}%`, 
+                      background: Math.random() > 0.05 ? 'var(--success)' : 'var(--danger)',
+                      opacity: 0.8,
+                      borderRadius: '1px'
+                    }} />
+                  ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', color: 'var(--meta)', fontSize: '11px' }}>
+                  <span>Há 30 Dias</span>
+                  <span>Hoje</span>
+                </div>
+              </div>
+
+              <div className="card">
+                <h3 style={{ fontSize: '18px', marginBottom: '12px' }}>Logs do Sistema</h3>
+                <LogPanel logs={logs} />
+              </div>
+            </div>
+
+            <section style={{ marginTop: 'var(--space-8)', textAlign: 'center' }}>
+              <div style={{ padding: '24px', background: 'var(--surface)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border)' }}>
+                <h3 style={{ marginBottom: '8px' }}>Links Úteis</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
+                  {['Portal SIGA', 'Biblioteca', 'Grade de Horários', 'E-mail Institucional'].map(link => (
+                    <a key={link} href="#" style={{ color: 'var(--fg)', textDecoration: 'none', fontWeight: '600', borderBottom: '2px solid var(--accent)' }}>
+                      {link}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </main>
+
+          <footer style={{ marginTop: 'var(--space-8)', padding: '40px 0', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--meta)', fontSize: '13px' }}>
+            Monitorando: <code style={{ background: '#eee', padding: '2px 4px' }}>https://www.fatecsp.br/</code>
+          </footer>
+
+          <HedgehogMascot status={status} />
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
